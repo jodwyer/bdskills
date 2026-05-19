@@ -496,6 +496,21 @@ The AI-Implement orchestrator does not consider `parentId` when filtering for pi
 
 **When NOT to set `parentId`:** build-ups that don't decompose an existing umbrella (i.e., the build-up creates a fresh set of independent issues with no overarching tracking issue) don't need it. The `parentId` convention is specifically for the umbrella case.
 
+#### Post-deploy human verification belongs in its own child
+
+When a decomposition includes a step that requires post-deploy validation — UX signoff, paper-data confirmation, prod observation, render verification on a deployed app — file that as a separate sibling child of the umbrella, **not** as an acceptance criterion on the implementation issue.
+
+The implementation issue's PR auto-closes on merge via `Fixes <ID>`, which **triggers** the deploy that makes verification possible. Bundling the verification AC into the implementation issue creates a catch-22: pre-merge signoff is impossible because the deploy is post-merge.
+
+**Shape of the verification child:**
+
+- `parentId: <umbrella-id>` (sibling of the implementation children).
+- `blockedBy: <implementation-child-id>` — naturally surfaces in Linear after the implementation closes.
+- **No `AI-Implement` label** — human-gated; the orchestrator's pickup filter requires the label so unlabeled issues are never dispatched.
+- Acceptance criteria describe the verification runbook (commands to run, UI pages to inspect, screenshots/logs to attach).
+
+Examples that fit this pattern: "verify UI renders correctly on the deployed app", "run `/aw-analyze` on paper data to confirm DB rows populate as expected", "operator sign-off via PR comment after N production trading days observed". If the verification can't be run from a PR diff alone, it belongs in its own child.
+
 #### Pilot-first sequencing for repeated patterns
 
 **Trigger:** the wave contains **≥ 3 issues applying the same task template to different surfaces** (e.g., "enable pagination on `/employees/`", "…on `/assignments/`", "…on `/calculations/`"; or "convert app X serializers to explicit fields", same for app Y, app Z).
